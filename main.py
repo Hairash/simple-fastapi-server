@@ -1,14 +1,14 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from fastapi import FastAPI, Request
 
 app = FastAPI()
 
 
-class Item(BaseModel):
-    data: str
+# class Item(BaseModel):
+#     data: str
 
 
 @app.post("/webhook/")
-async def receive_webhook(item: Item):
-    print(f"Received webhook: {item.data}")
-    return {"message": "Received successfully", "data": item.data}
+async def receive_webhook(request: Request):
+    body = await request.json()
+    print(f"Received webhook: {body}")
+    return {"message": "Received successfully", "body": body}
