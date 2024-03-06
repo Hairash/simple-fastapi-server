@@ -1,7 +1,8 @@
 import base64
 import json
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import HTMLResponse
 
 app = FastAPI()
 
@@ -19,3 +20,29 @@ async def receive_webhook(request: Request):
     print(f'Received webhook: {json.dumps(request_json, indent=4)}')
     # TODO: Hide decoded data from response
     return {"message": "Received successfully", "body": request_json}
+
+
+@app.post("/signup/")
+async def handle_signup(request: Request):
+    # Attempt to extract the JWT from the x-gcp-marketplace-token header
+    jwt_token = request.headers.get("x-gcp-marketplace-token", "No JWT token provided")
+
+    # For demonstration, print the JWT token to console
+    print(f"Received JWT token: {jwt_token}")
+
+    # If you need to parse and use the JWT token, do so here
+    # Example: decoded_jwt = jwt.decode(jwt_token, options={"verify_signature": False})
+
+    # Prepare a simple HTML response
+    html_content = """
+    <html>
+        <head>
+            <title>Sign Up Successful</title>
+        </head>
+        <body>
+            <h1>Thank you for signing up!</h1>
+            <p>Your account is now being set up.</p>
+        </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content, status_code=200)
