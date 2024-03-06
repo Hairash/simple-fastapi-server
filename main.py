@@ -30,6 +30,18 @@ async def handle_signup(request: Request):
     # For demonstration, print the JWT token to console
     print(f"Received JWT token: {jwt_token}")
 
+    try:
+        request_json = await request.json()
+        print(f'Request json: {request_json}')
+    except Exception as e:
+        print(e)
+
+    try:
+        request_body = await request.body()
+        print(f'Request body: {request_body}')
+    except Exception as e:
+        print(e)
+
     # If you need to parse and use the JWT token, do so here
     # Example: decoded_jwt = jwt.decode(jwt_token, options={"verify_signature": False})
 
