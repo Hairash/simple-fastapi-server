@@ -64,3 +64,13 @@ async def handle_signup(token: str = Form(...)):
     </html>
     """
     return HTMLResponse(content=html_content, status_code=200)
+
+
+@app.post("/signup.html")
+async def signup_html(request: Request):
+    # Extract the form data or raw body here, similar to your original /signup endpoint
+    form_data = await request.form()
+    token = form_data.get('x-gcp-marketplace-token')
+    print(f'Received x-gcp-marketplace-token: {token}')
+    # Process the token as needed...
+    return HTMLResponse(content="<h1>Thank you for signing up!</h1>", status_code=200)
