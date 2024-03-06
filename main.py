@@ -22,7 +22,7 @@ async def receive_webhook(request: Request):
     return {"message": "Received successfully", "body": request_json}
 
 
-@app.post("/signup/")
+@app.post("/signup")
 async def handle_signup(request: Request):
     # Attempt to extract the JWT from the x-gcp-marketplace-token header
     jwt_token = request.headers.get("x-gcp-marketplace-token", "No JWT token provided")
