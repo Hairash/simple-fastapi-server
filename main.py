@@ -16,6 +16,8 @@ SERVICE_ACCOUNT_FILE = 'gcp-connect-integration.json'
 # Specify the scopes required for the Google Cloud Marketplace Procurement API
 SCOPES = ['https://www.googleapis.com/auth/cloud-platform']
 
+SERVICE_ACCOUNT_TOKEN = os.environ['SERVICE_ACCOUNT_TOKEN']
+
 
 app = FastAPI()
 
@@ -33,8 +35,17 @@ async def receive_webhook(request: Request):
     data = json.loads(base64.b64decode(encoded_data).decode('utf-8'))
     request_json['message']['data'] = data
     print(f'Received webhook: {json.dumps(request_json, indent=4)}')
-    # TODO: Hide decoded data from response
-    return {"message": "Received successfully", "body": request_json}
+    if data['eventType'] == 'ENTITLEMENT_CREATION_REQUESTED':
+        ENTITLEMENT_ID = data['entitlement']['id']
+        url = f'https://cloudcommerceprocurement.googleapis.com/v1/providers/{PROVIDER_ID}/entitlements/{ENTITLEMENT_ID}:approve'
+        headers = {
+            'Authorization': f'Bearer {SERVICE_ACCOUNT_TOKEN}',
+            'Content-Type': 'application/json',
+        }
+        body = {}
+        response = requests.post(url, headers=headers, json=body)
+        print(f'Entitlement approval response: {response.json()}')
+    return {"message": "Received successfully"}
 
 
 @app.post("/signup/")
@@ -78,12 +89,10 @@ async def handle_signup(request: Request):
         # # Now you have the access token
         # access_token = credentials.token
         # Temporary get token from environment
-        access_token = os.environ['SERVICE_ACCOUNT_TOKEN']
-        print(f'access_token: {access_token}')
 
         url = f'https://cloudcommerceprocurement.googleapis.com/v1/providers/{PROVIDER_ID}/accounts/{USER_ACCOUNT_ID}:approve'
         headers = {
-            'Authorization': f'Bearer {access_token}',
+            'Authorization': f'Bearer {SERVICE_ACCOUNT_TOKEN}',
             'Content-Type': 'application/json',
         }
         body = {}
