@@ -18,11 +18,11 @@ SCOPES = ['https://www.googleapis.com/auth/cloud-platform']
 
 SERVICE_ACCOUNT_TOKEN = os.environ['SERVICE_ACCOUNT_TOKEN']
 
-
-app = FastAPI()
-
 # From configuration
 PROVIDER_ID = 'gcp-connect-integration'
+
+
+app = FastAPI()
 
 # class Item(BaseModel):
 #     data: str
