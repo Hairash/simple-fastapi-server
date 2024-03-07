@@ -1,4 +1,6 @@
 fastapi
-uvicorn
+google-auth
 python-multipart
-jwt
+pyjwt
+requests
+uvicorn

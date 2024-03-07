@@ -1,12 +1,26 @@
 import base64
 import json
 import jwt
+import os
+import requests
 
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse
 
+from google.oauth2 import service_account
+import google.auth.transport.requests
+
+# Path to your service account key file
+SERVICE_ACCOUNT_FILE = 'gcp-connect-integration.json'
+
+# Specify the scopes required for the Google Cloud Marketplace Procurement API
+SCOPES = ['https://www.googleapis.com/auth/cloud-platform']
+
+
 app = FastAPI()
 
+# From configuration
+PROVIDER_ID = 'gcp-connect-integration'
 
 # class Item(BaseModel):
 #     data: str
@@ -23,7 +37,7 @@ async def receive_webhook(request: Request):
     return {"message": "Received successfully", "body": request_json}
 
 
-@app.post("/signup")
+@app.post("/signup/")
 async def handle_signup(request: Request):
     # Attempt to extract the JWT from the x-gcp-marketplace-token header
     # jwt_token = request.headers.get("x-gcp-marketplace-token", "No JWT token provided")
@@ -48,15 +62,36 @@ async def handle_signup(request: Request):
         form_data = await request.form()
         token = form_data.get('x-gcp-marketplace-token')
         print(f'Received x-gcp-marketplace-token: {token}')
+        decoded_jwt = jwt.decode(token, options={"verify_signature": False})
+        print(f'Decoded token:', decoded_jwt)
+        USER_ACCOUNT_ID = decoded_jwt["sub"]
+        print(f'USER_ACCOUNT_ID: {USER_ACCOUNT_ID}')
+
+        # Load the service account credentials from the key file
+        # credentials = service_account.Credentials.from_service_account_file(
+        #     SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+        #
+        # # Request a new token
+        # request = google.auth.transport.requests.Request()
+        # credentials.refresh(request)
+        #
+        # # Now you have the access token
+        # access_token = credentials.token
+        # Temporary get token from environment
+        access_token = os.environ['SERVICE_ACCOUNT_TOKEN']
+        print(f'access_token: {access_token}')
+
+        url = f'https://cloudcommerceprocurement.googleapis.com/v1/providers/{PROVIDER_ID}/accounts/{USER_ACCOUNT_ID}:approve'
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json',
+        }
+        body = {}
+        response = requests.post(url, headers=headers, json=body)
+        print(f'Account approval response: {response.json()}')
+
     except Exception as e:
         print(e)
-
-    # If you need to parse and use the JWT token, do so here
-    # try:
-    #     decoded_jwt = jwt.decode(token, options={"verify_signature": False})
-    # except Exception as e:
-    #     print(e)
-
 
     # Prepare a simple HTML response
     html_content = """
@@ -73,11 +108,11 @@ async def handle_signup(request: Request):
     return HTMLResponse(content=html_content, status_code=200)
 
 
-@app.post("/signup.html")
-async def signup_html(request: Request):
-    # Extract the form data or raw body here, similar to your original /signup endpoint
-    form_data = await request.form()
-    token = form_data.get('x-gcp-marketplace-token')
-    print(f'Received x-gcp-marketplace-token: {token}')
-    # Process the token as needed...
-    return HTMLResponse(content="<h1>Thank you for signing up!</h1>", status_code=200)
+# @app.post("/signup.html")
+# async def signup_html(request: Request):
+#     # Extract the form data or raw body here, similar to your original /signup endpoint
+#     form_data = await request.form()
+#     token = form_data.get('x-gcp-marketplace-token')
+#     print(f'Received x-gcp-marketplace-token: {token}')
+#     # Process the token as needed...
+#     return HTMLResponse(content="<h1>Thank you for signing up!</h1>", status_code=200)
